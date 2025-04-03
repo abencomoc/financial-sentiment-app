@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: financial-sentiment-ui
+  namespace: financial-sentiment-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: financial-sentiment-ui
+  template:
+    metadata:
+      labels:
+        app: financial-sentiment-ui
+    spec:
+      containers:
+      - name: financial-sentiment-ui
+        image: 507992857438.dkr.ecr.us-east-1.amazonaws.com/financial-sentiment-app:amd64-0.1
+        ports:
+        - containerPort: 8501
+          name: streamlit
+        env:
+        - name: NEWS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: news-api-key
+        - name: FINBERT_API_URL
+          value: "http://finbert-cpu-serve-svc.finbert-cpu:8000"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+        readinessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 10
+          periodSeconds: 30
