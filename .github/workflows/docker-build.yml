@@ -3,7 +3,9 @@ name: Build and Push to ECR
 on:
   push:
     branches: [ "main" ]
-
+    paths:
+      - 'src/**'    # Only trigger on changes to this folder
+      - '.github/workflows/**'        # Optional: include workflow file changes
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: financial_sentiment_app
