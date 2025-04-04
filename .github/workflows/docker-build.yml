@@ -8,7 +8,7 @@ on:
       - '.github/workflows/**'        # Optional: include workflow file changes
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: financial_sentiment_app
+  ECR_REPOSITORY: financial-sentiment-app
   AWS_ROLE_ARN: "arn:aws:iam::507992857438:role/github-actions-role"
 
 permissions:
