@@ -17,7 +17,7 @@ permissions:
   contents: read    # This is required for actions/checkout
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -45,28 +45,24 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Update deployment file
+      # Set the full image URI as output
+      - name: Set image URI
+        id: image-uri
         run: |
-          # Update image tag in deployment file
-          sed -i "s|image: .*$ECR_REPOSITORY:.*|image: ${{ needs.build.outputs.image_uri }}|g" ${{ env.DEPLOYMENT_FILE }}
-          
-          # Configure Git
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          
-          # Show the changes (for debugging)
-          echo "Changes to be committed:"
-          git diff ${{ env.DEPLOYMENT_FILE }}
-          
-          # Commit and push changes
-          git add ${{ env.DEPLOYMENT_FILE }}
-          git commit -m "chore: update image tag to ${{ github.sha }}"
-          git push origin main
+          echo "image_uri=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+  # update-deployment:
+  #   needs: build-and-push
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+        
+  #     - name: Update deployment.yaml
+  #       uses: fjogeleit/yaml-update-action@main
+  #       with:
+  #         valueFile: ${{ env.ECR_REPOSITORY }}
+  #         propertyPath: 'spec.template.spec.containers[0].image'  # Adjust path to your YAML structure
+  #         value: ${{ needs.build.outputs.image_uri }}
+  #         commitChange: true
+  #         branch: main
+  #         token: ${{ secrets.GITHUB_TOKEN }}
