@@ -10,6 +10,7 @@ env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: financial-sentiment-app
   AWS_ROLE_ARN: "arn:aws:iam::507992857438:role/github-actions-role"
+  DEPLOYMENT_FILE: eks/deployment.yaml
 
 permissions:
   id-token: write   # This is required for requesting the JWT
@@ -43,3 +44,29 @@ jobs:
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Update deployment file
+        run: |
+          # Update image tag in deployment file
+          sed -i "s|image: .*$ECR_REPOSITORY:.*|image: ${{ needs.build.outputs.image_uri }}|g" ${{ env.DEPLOYMENT_FILE }}
+          
+          # Configure Git
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          
+          # Show the changes (for debugging)
+          echo "Changes to be committed:"
+          git diff ${{ env.DEPLOYMENT_FILE }}
+          
+          # Commit and push changes
+          git add ${{ env.DEPLOYMENT_FILE }}
+          git commit -m "chore: update image tag to ${{ github.sha }}"
+          git push origin main
