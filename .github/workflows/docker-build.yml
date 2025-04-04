@@ -10,7 +10,7 @@ env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: financial-sentiment-app
   AWS_ROLE_ARN: "arn:aws:iam::507992857438:role/github-actions-role"
-  DEPLOYMENT_FILE: eks/deployment.yaml
+  DEPLOYMENT_FILE: eks/deployment.yml
 
 permissions:
   id-token: write   # This is required for requesting the JWT
